@@ -16,15 +16,20 @@ use League\OAuth2\Server\Grant\PasswordGrant;
  */
 class CustomRequestGrantProvider extends PassportServiceProvider
 {
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        app(AuthorizationServer::class)->enableGrantType($this->makeCustomRequestGrant(), Passport::tokensExpireIn());
-    }
+    // /**
+    //  * Bootstrap any application services.
+    //  *
+    //  * @return void
+    //  */
+    // public function boot()
+    // {
+    //     $server = app(AuthorizationServer::class);
+    //     $server->setEncryptionKey(env('APP_ENV'));
+    //     $server->enableGrantType(
+    //         $this->makeCustomRequestGrant(),
+    //         Passport::tokensExpireIn()
+    //     );
+    // }
 
     /**
      * Register the service provider.
@@ -34,6 +39,50 @@ class CustomRequestGrantProvider extends PassportServiceProvider
     public function register()
     {
     }
+
+    /**
+     * Register the authorization server.
+     *
+     * @return void
+     */
+    protected function registerAuthorizationServer()
+    {
+        $this->app->singleton(AuthorizationServer::class, function () {
+            return tap($this->makeAuthorizationServer(), function ($server) {
+                
+                $server->enableGrantType(
+                    $this->makeCustomRequestGrant(), Passport::tokensExpireIn()
+                );
+                
+                $server->enableGrantType(
+                    $this->makeAuthCodeGrant(), Passport::tokensExpireIn()
+                );
+
+                $server->enableGrantType(
+                    $this->makeRefreshTokenGrant(), Passport::tokensExpireIn()
+                );
+
+                $server->enableGrantType(
+                    $this->makePasswordGrant(), Passport::tokensExpireIn()
+                );
+
+                $server->enableGrantType(
+                    new PersonalAccessGrant, new DateInterval('P1Y')
+                );
+
+                $server->enableGrantType(
+                    new ClientCredentialsGrant, Passport::tokensExpireIn()
+                );
+
+                if (Passport::$implicitGrantEnabled) {
+                    $server->enableGrantType(
+                        $this->makeImplicitGrant(), Passport::tokensExpireIn()
+                    );
+                }
+            });
+        });
+    }
+
 
     /**
      * Create and configure a Password grant instance.
