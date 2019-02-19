@@ -2,12 +2,15 @@
 
 namespace MikeMcLin\Passport;
 
+use DateInterval;
 use Laravel\Passport\Bridge\RefreshTokenRepository;
 use Laravel\Passport\Bridge\UserRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\PassportServiceProvider;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\PasswordGrant;
+use Laravel\Passport\Bridge\PersonalAccessGrant;
+use League\OAuth2\Server\Grant\ClientCredentialsGrant;
 
 /**
  * Class CustomQueueServiceProvider
@@ -31,13 +34,12 @@ class CustomRequestGrantProvider extends PassportServiceProvider
     //     );
     // }
 
-    /**
-     * Register the service provider.
-     *
-     * @return void
-     */
+
     public function register()
     {
+        $this->registerAuthorizationServer();
+        $this->registerResourceServer();
+        $this->registerGuard();
     }
 
     /**
@@ -53,7 +55,7 @@ class CustomRequestGrantProvider extends PassportServiceProvider
                 $server->enableGrantType(
                     $this->makeCustomRequestGrant(), Passport::tokensExpireIn()
                 );
-                
+
                 $server->enableGrantType(
                     $this->makeAuthCodeGrant(), Passport::tokensExpireIn()
                 );
@@ -79,6 +81,7 @@ class CustomRequestGrantProvider extends PassportServiceProvider
                         $this->makeImplicitGrant(), Passport::tokensExpireIn()
                     );
                 }
+                
             });
         });
     }
